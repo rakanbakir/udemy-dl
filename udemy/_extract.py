@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 
 Author  : Nasir Khan (r0ot h3x49)
 Github  : https://github.com/r0oth3x49
 License : MIT
 
 
-Copyright (c) 2018 Nasir Khan (r0ot h3x49)
+Copyright (c) 2020 Nasir Khan (r0ot h3x49)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the
 Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
@@ -21,7 +21,7 @@ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVE
 ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
 THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-'''
+"""
 
 import os
 import re
@@ -70,7 +70,7 @@ class Udemy(ProgressBar):
         return text
 
     def _course_name(self, url):
-        mobj = re.search(r'(?i)(?://(?P<portal_name>.+?).udemy.com/(?:(course|draft)/)?(?P<name_or_id>[a-zA-Z0-9_-]+))', url)
+        mobj = re.search(r'(?i)(?://(?P<portal_name>.+?).udemy.com/(?:course(/draft)*/)?(?P<name_or_id>[a-zA-Z0-9_-]+))', url)
         if mobj:
             return mobj.group('portal_name'), mobj.group('name_or_id')
 
@@ -154,6 +154,23 @@ class Udemy(ProgressBar):
             results = webpage.get('results', [])
         return results
 
+    def _archived_courses(self, portal_name):
+        results = []
+        try:
+            url = MY_COURSES_URL.format(portal_name=portal_name) + "&is_archived=true"
+            webpage = self._session._get(url).json()
+        except conn_error as e:
+            sys.stdout.write(fc + sd + "[" + fr + sb + "-" + fc + sd + "] : " + fr + sb + "Connection error : make sure your internet connection is working.\n")
+            time.sleep(0.8)
+            sys.exit(0)
+        except (ValueError, Exception) as e:
+            sys.stdout.write(fc + sd + "[" + fr + sb + "-" + fc + sd + "] : " + fr + sb + "%s.\n" % (e))
+            time.sleep(0.8)
+            sys.exit(0)
+        else:
+            results = webpage.get('results', [])
+        return results
+
     def _subscribed_collection_courses(self, portal_name):
         url = COLLECTION_URL.format(portal_name=portal_name)
         courses_lists = []
@@ -177,22 +194,26 @@ class Udemy(ProgressBar):
         _temp = {}
         if response:
             for entry in response:
-                course_id = entry.get('id')
+                course_id = str(entry.get('id'))
                 published_title = entry.get('published_title')
                 if course_name in (published_title, course_id):
                     _temp = entry
+                    break
         return _temp
 
     def _extract_course_info(self, url):
         portal_name, course_name = self._course_name(url)
         course = {}
         results = self._subscribed_courses(portal_name=portal_name, course_name=course_name)
-        if not results:
+        course = self.__extract_course(response=results, course_name=course_name)
+        if not course:
             results = self._my_courses(portal_name=portal_name)
-        if results:
             course = self.__extract_course(response=results, course_name=course_name)
         if not course:
             results = self._subscribed_collection_courses(portal_name=portal_name)
+            course = self.__extract_course(response=results, course_name=course_name)
+        if not course:
+            results = self._archived_courses(portal_name=portal_name)
             course = self.__extract_course(response=results, course_name=course_name)
 
         if course:
@@ -207,10 +228,13 @@ class Udemy(ProgressBar):
             sys.stdout.write(fc + sd + "[" + fm + sb + "+" + fc + sd + "] : " + fg + sb + "Logged out successfully.\n")
             sys.exit(0)
 
-    def _extract_large_course_content(self, url):
-        url = url.replace('10000', '300') if url.endswith('10000') else url
+    def _extract_large_course_content(self, url, current_size=10000, page_size=300):
+        data = {}
+        url = url.replace(str(current_size), str(page_size)) if url.endswith(str(current_size)) else url
         try:
             data = self._session._get(url).json()
+        except (Exception, ValueError) as error:
+            data = self._extract_large_course_content(url, current_size=300, page_size=50)
         except conn_error as e:
             sys.stdout.write(fc + sd + "[" + fr + sb + "-" + fc + sd + "] : " + fr + sb + "Connection error : make sure your internet connection is working.\n")
             time.sleep(0.8)
@@ -230,14 +254,14 @@ class Udemy(ProgressBar):
                     if results and isinstance(results, list):
                         for d in resp['results']:
                             data['results'].append(d)
-            return data
+        return data
 
     def _extract_course_json(self, url, course_id, portal_name):
         self._session._headers.update({'Referer' : url})
         url = COURSE_URL.format(portal_name=portal_name, course_id=course_id)
         try:
             resp = self._session._get(url)
-            if resp.status_code == 502:
+            if resp.status_code in [502, 503]:
                 resp = self._extract_large_course_content(url=url)
             else:
                 resp = resp.json()

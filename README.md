@@ -7,7 +7,20 @@
 # udemy-dl
 **A cross-platform python based utility to download courses from udemy for personal offline use.**
 
+### Important Note:
+ - Don't share your credentials until the issue is properly tagged/labeled with **account-needed**.
+ - Owner of this repository is not responsible for any miss use if you share your credentials with strangers.
+
 [![udemy-dl-0-5.png](https://s26.postimg.cc/67x3wfak9/udemy-dl-0-5.png)](https://postimg.cc/image/s73ijmred/)
+
+
+### Before creating an issue, please do the following:
+
+1. **Use the GitHub issue search** &mdash; check if the issue is already reported.
+2. **Check if the issue is already fixed** &mdash; try to reproduce it using the latest `master` in the repository.
+3. Make sure, that information you are about to report is related to this repository 
+   and not the one available on ***Python's repository, PyPi***, Because this repository cannot be downloaded/installed via pip command.
+
 
 ## ***Features***
 
@@ -19,6 +32,7 @@
 - Download/skip all available subtitles for a video (options: `--sub-only, --skip-sub`).
 - Download specific chapter in a course (option: `-c / --chapter`).
 - Download specific lecture in a chapter (option: `-l / --lecture`).
+- Download specific subtitle for a lecture (option: `-s / --sub-lang`).
 - Download chapter(s) by providing range in a course (option: `--chapter-start, --chapter-end`).
 - Download lecture(s) by providing range in a chapter (option: `--lecture-start, --lecture-end`).
 - Download lecture(s) in requested resolution (option: `-q / --quality`).
@@ -27,41 +41,15 @@
 - Download/save lecture names (option: `--names`).
 - Download lectures containing unsafe *unicode* characters in title/name (option: `--unsafe`).
 
-## ***Issue Reporting Guideline***
-
-To maintain an effective bugfix workflow and make sure issues will be solved, I ask reporters to follow some simple guidelines.
-
-### ***Note***
- - ***if any of the issue is not following the below template and guideline i will not facilitate that issue & will directly close.***
-
-Before creating an issue, please do the following:
-
-1. **Use the GitHub issue search** &mdash; check if the issue has already been reported.
-2. **Check if the issue has been fixed** &mdash; try to reproduce it using the latest `master` in the repository.
-3. Make sure, that information you are about to report is related to this repository 
-   and not the one available ***Python's repository***, Because this repository cannot be downloaded via pip.
-
-A good bug report shouldn't leave others needing to chase you up for more
-information. Please try to be as detailed as possible in your report. What is
-your environment? What was the course url? What steps will reproduce the issue? What OS
-experience the problem? All these details will help to fix any potential bugs as soon as possible.
-
-### ***Example:***
-
-> Short and descriptive example bug report title
->
-> A summary of the issue and the OS environment in which it occurs. If
-> suitable, include the steps required to reproduce the bug.
->
-> 1. This is the first step
-> 2. This is the second step
-> 3. Further steps, etc.
->
-> `<url>` - a udemy course link to reproduce the error.
->
-> Any other information you want to share that is relevant to the issue being reported.
-
 ## ***How to login with cookie***
+
+The `cookies.txt` file should have the following simple format, eg:
+
+```ini
+access_token=JKU9QNs2IQDBKoYKvOBclSPXN97baf32o1Jo2L9vX
+```
+
+### Finding your access token value
 
  - ***Firefox*** users : [guide by @01ttouch](https://github.com/r0oth3x49/udemy-dl/issues/389#issuecomment-491903900)
  - ***Chrome*** users : [guide by @01ttouch](https://github.com/r0oth3x49/udemy-dl/issues/389#issuecomment-492569372)
@@ -144,13 +132,17 @@ You can download the latest version of udemy-dl by cloning the GitHub repository
 
     python udemy-dl.py COURSE_URL -c NUMBER -l NUMBER --info
 
+***Download specific subtite by using language code such as (en, es) if lang switch is not specified then default will be all subtitles***
+
+    python udemy-dl.py COURSE_URL --sub-lang en
+
 
 ## **Advanced Usage**
 
 <pre><code>
 Author: Nasir khan (<a href="http://r0oth3x49.herokuapp.com/">r0ot h3x49</a>)
 
-usage: udemy-dl.py [-h] [-v] [-u] [-p] [-k] [-o] [-q] [-c] [-l]
+usage: udemy-dl.py [-h] [-v] [-u] [-p] [-k] [-o] [-q] [-c] [-l] [-s]
                    [--chapter-start] [--chapter-end] [--lecture-start]
                    [--lecture-end] [--save] [--info] [--cache] [--names]
                    [--unsafe] [--sub-only] [--skip-sub]
@@ -176,6 +168,7 @@ Advance:
   -q , --quality    Download specific video quality.
   -c , --chapter    Download specific chapter from course.
   -l , --lecture    Download specific lecture from chapter(s).
+  -s , --sub-lang   Download specific subtitle/caption (e.g:- en).
   --chapter-start   Download from specific position within course.
   --chapter-end     Download till specific position within course.
   --lecture-start   Download from specific position within chapter(s).
@@ -195,3 +188,14 @@ Example:
   python udemy-dl.py  COURSE_URL -k cookies.txt
   python udemy-dl.py -u user@domain.com -p p4ssw0rd COURSE_URL
 </code></pre>
+
+
+
+## ***Todo (for next release)***
+ - Restructure code.
+ - add proper logging for information and errors.
+ - add support to download multiple courses from file
+ - add support to download just EN subtitles by default
+ - add switch to keep vtt subtitles as well.
+ - Add support to download 1080p if available. (most waited feature)
+ - Add support to download course on a flaky connection.
